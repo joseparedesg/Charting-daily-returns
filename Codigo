@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 18 12:16:46 2019
+
+@author: Man
+"""
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+mainpath = r'C:\Users\Man\Documents\Machine Learning\Phyton Machine Learning\python-ml-course-master\datasets'
+filename = r'\Stocks\NAFTRAC.csv'
+fullpath = mainpath + filename
+naftrac = pd.read_csv(fullpath, index_col="Date",parse_dates=True, usecols=["Date","Adj Close"])
+naftrac.head()
+
+mainpath2 = r'C:\Users\Man\Documents\Machine Learning\Phyton Machine Learning\python-ml-course-master\datasets'
+filename2 = r'\Stocks\SPY.csv'
+fullpath2 = mainpath2 + filename2
+spy = pd.read_csv(fullpath2, index_col="Date",parse_dates=True, usecols=["Date","Adj Close"])
+spy.head()
+
+#se crea una base de solos fechas
+start_date = "2002-04-16"
+end_date = "2018-12-31"
+dates = pd.date_range(start_date,end_date)
+df1 = pd.DataFrame(index=dates)
+
+#unir SPY
+df1 = df1.join(spy)
+
+#cambiamos nombre
+df1 = df1.rename(columns={"Adj Close": "SPY"})
+
+#Metemos naftrac
+#unir naftrac
+df1 = df1.join(naftrac)
+#cambiamos nombre
+df1 = df1.rename(columns={"Adj Close": "NAFTRAC"})
+
+#edliminamos nans
+df1 = df1.dropna()
+
+#Calculamos retornos diarios
+
+daily_returns = df1.copy()
+daily_returns[1:] = (df1[1:]/df1[:-1].values-1)
+#convertir row 1 a 0
+daily_returns.ix[0,:]=0
+
+
+daily_returns.plot(kind="scatter", x="SPY", y="NAFTRAC")
+beta_gld, alpha_gld= np.polyfit(daily_returns["SPY"],daily_returns["NAFTRAC"],1)
+plt.plot(daily_returns["SPY"],beta_gld*daily_returns["SPY"]+alpha_gld,"-",color="r")
+plt.title('Correlacion Indices USA y México')
+plt.xlabel('SPY retornos diarios')
+plt.ylabel('NAFTRAC retornos diarios')
+plt.show()
+
+daily_returns.corr(method="pearson")
